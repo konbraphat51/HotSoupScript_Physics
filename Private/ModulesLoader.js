@@ -1,9 +1,9 @@
 //Automatically imports all codes of this library to the HTML
 
-const HSSPModules = [
-
-]
+const HSSPModules = ["Collision.js"]
 
 for (let i = 0; i < HSSPModules.length; i++) {
-	document.write("<script src=\"HotSoupScript/Public/" + HSSPModules[i] + "\"></script>")
+	document.write(
+		'<script src="HotSoupScript/Public/' + HSSPModules[i] + '"></script>',
+	)
 }
