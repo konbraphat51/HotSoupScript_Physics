@@ -145,8 +145,6 @@ function _IsOriginInTriangle(points) {
 
 	return (
 		//every node
-		(c01 > 0 && c12 > 0 && c20 > 0) ||
-		(c01 < 0 && c12 < 0 && c20 < 0) ||
-		Approximate(c01 * c12 * c20, 0)
+		(c01 > 0 && c12 > 0 && c20 > 0) || (c01 < 0 && c12 < 0 && c20 < 0)
 	)
 }
