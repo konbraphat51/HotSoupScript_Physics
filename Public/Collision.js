@@ -10,7 +10,7 @@
  * @returns {boolean} true if the polygons are colliding, false otherwise.
  * If exceeds the maximum number of iterations, undefined.
  */
-function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 500) {
+function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 5000) {
 	//initial directions
 	let directions = [
 		[0, 1],
@@ -86,6 +86,7 @@ function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 500) {
 		}
 	}
 
+	console.log("Exceeds the maximum number of iterations.")
 	return undefined
 }
 
