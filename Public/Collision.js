@@ -63,10 +63,10 @@ function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 500) {
 		]
 
 		//connected vector
-		const connected = SubVec(tipsLeft[1], tipsLeft[0])
+		const connected = MinusVec(tipsLeft[1], tipsLeft[0])
 
 		//select direction towards origin
-		if (CrossVec(connected, SubVec(origin, tipsLeft[0]) > 0)) {
+		if (CrossVec(connected, MinusVec(origin, tipsLeft[0]) > 0)) {
 			directions[indexFarthest] = Rotate2DVector(connected, 90)
 		} else {
 			directions[indexFarthest] = Rotate2DVector(connected, -90)
@@ -95,7 +95,7 @@ function _ComputeSupportPoint(polygon, direction) {
 	let maxDot = -Infinity
 	let maxPos = null
 
-	let tips = polygon.ComputeEdges()
+	let tips = polygon.ComputeVertices()
 
 	//find the most plus position
 	for (let cnt = 0; cnt < tips.length; cnt++) {
@@ -121,7 +121,7 @@ function _ComputeMinkowskiTip(polygon0, polygon1, direction) {
 	let support0 = _ComputeSupportPoint(polygon0, direction)
 	let support1 = _ComputeSupportPoint(polygon1, MultiplyVec(-1, direction))
 
-	return SubVec(support0[0], support1[0])
+	return MinusVec(support0[0], support1[0])
 }
 
 /**
@@ -130,15 +130,15 @@ function _ComputeMinkowskiTip(polygon0, polygon1, direction) {
  * @returns {boolean}
  */
 function _IsOriginInTriangle(points) {
-	const p01 = SubVec(points[1], points[0])
-	const p12 = SubVec(points[2], points[1])
-	const p20 = SubVec(points[0], points[2])
+	const p01 = MinusVec(points[1], points[0])
+	const p12 = MinusVec(points[2], points[1])
+	const p20 = MinusVec(points[0], points[2])
 
 	const origin = [0, 0]
 
-	const c01 = CrossVec(p01, SubVec(origin, points[0]))
-	const c12 = CrossVec(p12, SubVec(origin, points[1]))
-	const c20 = CrossVec(p20, SubVec(origin, points[2]))
+	const c01 = CrossVec(p01, MinusVec(origin, points[0]))
+	const c12 = CrossVec(p12, MinusVec(origin, points[1]))
+	const c20 = CrossVec(p20, MinusVec(origin, points[2]))
 
 	return (
 		//every node
