@@ -73,7 +73,11 @@ function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 500) {
 		}
 
 		//compute new tip
-		tips[indexFarthest] = _ComputeMinkowskiTip(polygon0, polygon1, newDirection)
+		tips[indexFarthest] = _ComputeMinkowskiTip(
+			polygon0,
+			polygon1,
+			directions[indexFarthest],
+		)
 
 		//if the new direction shows not including O...
 		if (DotVec(tips[indexFarthest], directions[indexFarthest]) < 0) {
@@ -121,7 +125,7 @@ function _ComputeMinkowskiTip(polygon0, polygon1, direction) {
 	let support0 = _ComputeSupportPoint(polygon0, direction)
 	let support1 = _ComputeSupportPoint(polygon1, MultiplyVec(-1, direction))
 
-	return MinusVec(support0[0], support1[0])
+	return MinusVec(support0, support1)
 }
 
 /**
@@ -135,7 +139,6 @@ function _IsOriginInTriangle(points) {
 	const p20 = MinusVec(points[0], points[2])
 
 	const origin = [0, 0]
-
 	const c01 = CrossVec(p01, MinusVec(origin, points[0]))
 	const c12 = CrossVec(p12, MinusVec(origin, points[1]))
 	const c20 = CrossVec(p20, MinusVec(origin, points[2]))
