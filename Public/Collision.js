@@ -80,6 +80,8 @@ function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 500) {
 			return false
 		}
 	}
+
+	return undefined
 }
 
 /**
