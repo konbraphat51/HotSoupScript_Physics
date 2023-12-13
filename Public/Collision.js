@@ -7,7 +7,8 @@
  * @param {Polygon} polygon0 polygon
  * @param {Polygon} polygon1 polygon
  * @param {number} maxIteration maximum number of iterations
- * @returns {boolean} true if the polygons are colliding, false otherwise
+ * @returns {boolean} true if the polygons are colliding, false otherwise.
+ * If exceeds the maximum number of iterations, undefined.
  */
 function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 500) {
 	//initial directions
