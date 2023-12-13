@@ -66,7 +66,7 @@ function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 500) {
 		const connected = MinusVec(tipsLeft[1], tipsLeft[0])
 
 		//select direction towards origin
-		if (CrossVec(connected, MinusVec(origin, tipsLeft[0]) > 0)) {
+		if (CrossVec(connected, MinusVec(origin, tipsLeft[0])) > 0) {
 			directions[indexFarthest] = Rotate2DVector(connected, 90)
 		} else {
 			directions[indexFarthest] = Rotate2DVector(connected, -90)
