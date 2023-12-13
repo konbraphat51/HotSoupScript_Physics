@@ -12,75 +12,81 @@
  */
 function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 5000) {
 	//initial directions
-	const directions = [
-		[1, 0],
-		[-1, 0],
+	let directions = [
+		[0, 1],
+		[0.866, -0.5],
+		[-0.866, -0.5],
 	]
 
 	//initial edgess
-	const tips = [
+	let tips = [
 		_ComputeMinkowskiTip(polygon0, polygon1, directions[0]),
 		_ComputeMinkowskiTip(polygon0, polygon1, directions[1]),
+		_ComputeMinkowskiTip(polygon0, polygon1, directions[2]),
 	]
 
 	//origin
 	const origin = [0, 0]
 
-	//set searcher direction angle
-	let searcherAngleL = -Math.PI + 0.001
-	let searcherAngleR = Math.PI
-
 	//if initial directions shows not including O...
 	if (
 		DotVec(tips[0], directions[0]) < 0 ||
-		DotVec(tips[1], directions[1]) < 0
+		DotVec(tips[1], directions[1]) < 0 ||
+		DotVec(tips[2], directions[2]) < 0
 	) {
 		//...then the polygons are not colliding
 		return false
 	}
 
-	//bisearch the invalid direction
 	for (let iteration = 0; iteration < iterationMax; iteration++) {
-		//try the middle angle
-		const searcherAngle = (searcherAngleL + searcherAngleR) / 2
-		const searcherDirection = [Math.cos(searcherAngle), Math.sin(searcherAngle)]
-		const searcherTip = _ComputeMinkowskiTip(
-			polygon0,
-			polygon1,
-			searcherDirection,
-		)
-
-		//if the searcherAngle shows not including O...
-		if (DotVec(searcherTip, searcherDirection) < 0) {
-			//...then polygons are not colliding
-			return false
-		}
-
 		//if the origin is in the triangle...
-		if (_IsOriginInTriangle([tips[0], tips[1], searcherTip])) {
+		if (_IsOriginInTriangle(tips)) {
 			//...then the polygons are colliding
 			return true
 		}
 
-		//computing next angle
-		const t0st = MinusVec(searcherTip, tips[0])
-		const t0o = MinusVec(origin, tips[0])
-		//if triangle is left than O...
-		if (CrossVec(t0st, t0o) < 0) {
-			//...then searcherAngleL is searcherAngle
-			searcherAngleL = searcherAngle
-		} else {
-			//...then searcherAngleR is searcherAngle
-			searcherAngleR = searcherAngle
+		//find farthest point in the direction of the origin
+		let indexFarthest = -1
+		let distanceFarthest = -Infinity
+		for (let cnt = 0; cnt < directions.length; cnt++) {
+			let dinstance = GetDistance(tips[cnt], origin)
+			if (dinstance > distanceFarthest) {
+				distanceFarthest = dinstance
+				indexFarthest = cnt
+			}
 		}
-		console.log(searcherAngle)
+
+		//points left
+		const tipsLeft = [
+			tips[(indexFarthest - 1 + 3) % 3],
+			tips[(indexFarthest + 1) % 3],
+		]
+
+		//connected vector
+		const connected = MinusVec(tipsLeft[1], tipsLeft[0])
+
+		//select direction towards origin
+		if (CrossVec(connected, MinusVec(origin, tipsLeft[0])) > 0) {
+			directions[indexFarthest] = Rotate2DVector(connected, 90)
+		} else {
+			directions[indexFarthest] = Rotate2DVector(connected, -90)
+		}
+
+		//compute new tip
+		tips[indexFarthest] = _ComputeMinkowskiTip(
+			polygon0,
+			polygon1,
+			directions[indexFarthest],
+		)
+
+		//if the new direction shows not including O...
+		if (DotVec(tips[indexFarthest], directions[indexFarthest]) < 0) {
+			//...then the polygons are not colliding
+			return false
+		}
 	}
 
-	console.log(
-		"Exceeds the maximum number of iterations.",
-		(searcherAngleL + searcherAngleR) / 2,
-	)
-	alert("a")
+	console.log("Exceeds the maximum number of iterations.")
 	return undefined
 }
 
@@ -138,7 +144,5 @@ function _IsOriginInTriangle(points) {
 	const c12 = CrossVec(p12, MinusVec(origin, points[1]))
 	const c20 = CrossVec(p20, MinusVec(origin, points[2]))
 
-	return (
-		(c01 > 0 && c12 > 0 && c20 > 0) || (c01 < 0 && c12 < 0 && c20 < 0)
-	)
+	return (c01 > 0 && c12 > 0 && c20 > 0) || (c01 < 0 && c12 < 0 && c20 < 0)
 }
