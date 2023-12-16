@@ -9,20 +9,20 @@
  * @param {number} maxIteration maximum number of iterations
  * @returns {boolean} true if the polygons are colliding, false otherwise.
  * If exceeds the maximum number of iterations, undefined.
+ * @see https://dyn4j.org/2010/04/gjk-gilbert-johnson-keerthi/#gjk-create
  */
 function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 5000) {
-	//initial directions
-	let directions = [
+	const initialDirections = [
+		[1, 0],
+		[-1, 0],
 		[0, 1],
-		[0.866, -0.5],
-		[-0.866, -0.5],
 	]
 
 	//initial edgess
 	let tips = [
-		_ComputeMinkowskiTip(polygon0, polygon1, directions[0]),
-		_ComputeMinkowskiTip(polygon0, polygon1, directions[1]),
-		_ComputeMinkowskiTip(polygon0, polygon1, directions[2]),
+		_ComputeMinkowskiTip(polygon0, polygon1, initialDirections[0]),
+		_ComputeMinkowskiTip(polygon0, polygon1, initialDirections[1]),
+		_ComputeMinkowskiTip(polygon0, polygon1, initialDirections[2]),
 	]
 
 	//origin
@@ -30,59 +30,57 @@ function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 5000) {
 
 	//if initial directions shows not including O...
 	if (
-		DotVec(tips[0], directions[0]) < 0 ||
-		DotVec(tips[1], directions[1]) < 0 ||
-		DotVec(tips[2], directions[2]) < 0
+		DotVec(tips[0], initialDirections[0]) < 0 ||
+		DotVec(tips[1], initialDirections[1]) < 0 ||
+		DotVec(tips[2], initialDirections[2]) < 0
 	) {
 		//...then the polygons are not colliding
 		return false
 	}
 
 	for (let iteration = 0; iteration < iterationMax; iteration++) {
+		//find the nearest edge to O
+		let nearestEdgeIndex = null //*0*->1, *1*->2, *2*->0
+		let nearestEdgeLength = Infinity
+		for (let cnt = 0; cnt < 3; cnt++) {
+			let tip = tips[cnt]
+			let nextTip = tips[(cnt + 1) % 3]
+			let edge = MinusVec(nextTip, tip)
+			let edgeDistance = GetDistanceFromLine2D(origin, tip, edge)
+
+			if (edgeDistance < nearestEdgeLength) {
+				nearestEdgeIndex = cnt
+				nearestEdgeLength = edgeDistance
+			}
+		}
+		const nearestEdge = MinusVec(
+			tips[(nearestEdgeIndex + 1) % 3],
+			tips[nearestEdgeIndex],
+		)
+
+		//select the normal vector towards O
+		const nearestEdge3D = [nearestEdge[0], nearestEdge[1], 0]
+		const toOrigin = MinusVec(origin, tips[nearestEdgeIndex])
+		const toOrigin3D = [toOrigin[0], toOrigin[1], 0]
+		let normal = CrossVec(CrossVec(nearestEdge3D, toOrigin3D), nearestEdge3D) //3D
+		normal = [normal[0], normal[1]] //convert to 2D
+
+		//compute Minkowski the tip for the normal vector
+		let newTip = _ComputeMinkowskiTip(polygon0, polygon1, normal)
+
+		//if the new direction shows not including O...
+		if (DotVec(newTip, normal) < 0) {
+			//...then the polygons are not colliding
+			return false
+		}
+
+		//swap with the farthest tip
+		tips[(nearestEdgeIndex + 2) % 3] = newTip
+
 		//if the origin is in the triangle...
 		if (_IsOriginInTriangle(tips)) {
 			//...then the polygons are colliding
 			return true
-		}
-
-		//find farthest point in the direction of the origin
-		let indexFarthest = -1
-		let distanceFarthest = -Infinity
-		for (let cnt = 0; cnt < directions.length; cnt++) {
-			let dinstance = GetDistance(tips[cnt], origin)
-			if (dinstance > distanceFarthest) {
-				distanceFarthest = dinstance
-				indexFarthest = cnt
-			}
-		}
-
-		//points left
-		const tipsLeft = [
-			tips[(indexFarthest - 1 + 3) % 3],
-			tips[(indexFarthest + 1) % 3],
-		]
-
-		//connected vector
-		const connected = MinusVec(tipsLeft[1], tipsLeft[0])
-
-		//select direction towards origin
-		if (CrossVec(connected, MinusVec(origin, tipsLeft[0])) > 0) {
-			directions[indexFarthest] = Rotate2DVector(connected, 90)
-		} else {
-			directions[indexFarthest] = Rotate2DVector(connected, -90)
-		}
-
-		//compute new tip
-		tips[indexFarthest] = _ComputeMinkowskiTip(
-			polygon0,
-			polygon1,
-			directions[indexFarthest],
-		)
-
-		//if the new direction shows not including O...
-		if (DotVec(tips[indexFarthest], directions[indexFarthest]) < 0) {
-			//...then the polygons are not colliding
-			return false
 		}
 	}
 
