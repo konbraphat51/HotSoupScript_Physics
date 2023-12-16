@@ -54,18 +54,36 @@ function Is2PolygonsColliding(
 			tips[targetEdgeIndex],
 		)
 
-		//select the normal vector towards O
-		const targetEdge3D = [targetEdge[0], targetEdge[1], 0]
-		const toOrigin = MinusVec(origin, tips[targetEdgeIndex])
-		const toOrigin3D = [toOrigin[0], toOrigin[1], 0]
-		let normal = CrossVec(CrossVec(targetEdge3D, toOrigin3D), targetEdge3D) //3D
-		normal = [normal[0], normal[1]] //convert to 2D
+		//get next direction
+		let nextDirection = [0, 0]
+		for (let selection = 0; selection < 2; selection++) {
+			//select the normal vector towards O
+			const targetEdge3D = [targetEdge[0], targetEdge[1], 0]
+			const toOrigin = MinusVec(origin, tips[targetEdgeIndex])
+			const toOrigin3D = [toOrigin[0], toOrigin[1], 0]
+			let normal = CrossVec(CrossVec(targetEdge3D, toOrigin3D), targetEdge3D) //3D
+			normal = [normal[0], normal[1]] //convert to 2D
+
+			//if normal vector is not outward the triangle...
+			let anotherEdge = MinusVec(
+				tips[(targetEdgeIndex + 2) % 3],
+				tips[targetEdgeIndex],
+			)
+			if (DotVec(anotherEdge, normal) > 0 && selection == 0) {
+				//...try another normal vector
+				continue
+			} else {
+				//use this normal vector
+				nextDirection = NormalizeVec(normal)
+				break
+			}
+		}
 
 		//compute Minkowski the tip for the normal vector
-		let newTip = _ComputeMinkowskiTip(polygon0, polygon1, normal)
+		let newTip = _ComputeMinkowskiTip(polygon0, polygon1, nextDirection)
 
 		//if the new direction shows not including O...
-		if (DotVec(newTip, normal) < 0) {
+		if (DotVec(newTip, nextDirection) < 0) {
 			//...then the polygons are not colliding
 			return false
 		}
@@ -80,23 +98,9 @@ function Is2PolygonsColliding(
 		}
 	}
 
-	//exceeded the maximum number of iterations
+	console.log("exceeded the maximum number of iterations")
 
-	//find any vector shows not including O
-	const angle_interval = (2 * Math.PI) / last_precision
-	for (let angle = 0; angle < 2 * Math.PI; angle += angle_interval) {
-		const direction = [Math.cos(angle), Math.sin(angle)]
-		const newTip = _ComputeMinkowskiTip(polygon0, polygon1, direction)
-
-		//if the new direction shows not including O...
-		if (DotVec(newTip, direction) < 0) {
-			//...then the polygons are not colliding
-			return false
-		}
-	}
-
-	//"probably" colliding
-	return true
+	return undefined
 }
 
 /**
