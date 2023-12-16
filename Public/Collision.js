@@ -39,30 +39,19 @@ function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 5000) {
 	}
 
 	for (let iteration = 0; iteration < iterationMax; iteration++) {
-		//find the nearest edge to O
-		let nearestEdgeIndex = null //*0*->1, *1*->2, *2*->0
-		let nearestEdgeLength = Infinity
-		for (let cnt = 0; cnt < 3; cnt++) {
-			let tip = tips[cnt]
-			let nextTip = tips[(cnt + 1) % 3]
-			let edge = MinusVec(nextTip, tip)
-			let edgeDistance = GetDistanceFromLine2D(origin, tip, edge)
+		//0 -> 01, 1 -> 12, 2 -> 20
+		let targetEdgeIndex = iteration % 3
 
-			if (edgeDistance < nearestEdgeLength) {
-				nearestEdgeIndex = cnt
-				nearestEdgeLength = edgeDistance
-			}
-		}
-		const nearestEdge = MinusVec(
-			tips[(nearestEdgeIndex + 1) % 3],
-			tips[nearestEdgeIndex],
+		const targetEdge = MinusVec(
+			tips[(targetEdgeIndex + 1) % 3],
+			tips[targetEdgeIndex],
 		)
 
 		//select the normal vector towards O
-		const nearestEdge3D = [nearestEdge[0], nearestEdge[1], 0]
-		const toOrigin = MinusVec(origin, tips[nearestEdgeIndex])
+		const targetEdge3D = [targetEdge[0], targetEdge[1], 0]
+		const toOrigin = MinusVec(origin, tips[targetEdgeIndex])
 		const toOrigin3D = [toOrigin[0], toOrigin[1], 0]
-		let normal = CrossVec(CrossVec(nearestEdge3D, toOrigin3D), nearestEdge3D) //3D
+		let normal = CrossVec(CrossVec(targetEdge3D, toOrigin3D), targetEdge3D) //3D
 		normal = [normal[0], normal[1]] //convert to 2D
 
 		//compute Minkowski the tip for the normal vector
@@ -75,7 +64,7 @@ function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 5000) {
 		}
 
 		//swap with the farthest tip
-		tips[(nearestEdgeIndex + 2) % 3] = newTip
+		tips[(targetEdgeIndex + 2) % 3] = newTip
 
 		//if the origin is in the triangle...
 		if (_IsOriginInTriangle(tips)) {
