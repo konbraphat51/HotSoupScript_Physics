@@ -7,11 +7,18 @@
  * @param {Polygon} polygon0 polygon
  * @param {Polygon} polygon1 polygon
  * @param {number} maxIteration maximum number of iterations
+ * @param {number} last_precision precision of last iteration when main loop didn't worked
+ * The calculation will be held O(last_precision * p0 * p1) times.
  * @returns {boolean} true if the polygons are colliding, false otherwise.
  * If exceeds the maximum number of iterations, undefined.
  * @see https://dyn4j.org/2010/04/gjk-gilbert-johnson-keerthi/#gjk-create
  */
-function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 5000) {
+function Is2PolygonsColliding(
+	polygon0,
+	polygon1,
+	iterationMax = 50,
+	last_precision = 360,
+) {
 	const initialDirections = [
 		[1, 0],
 		[-1, 0],
@@ -73,8 +80,23 @@ function Is2PolygonsColliding(polygon0, polygon1, iterationMax = 5000) {
 		}
 	}
 
-	console.log("Exceeds the maximum number of iterations.")
-	return undefined
+	//exceeded the maximum number of iterations
+
+	//find any vector shows not including O
+	const angle_interval = (2 * Math.PI) / last_precision
+	for (let angle = 0; angle < 2 * Math.PI; angle += angle_interval) {
+		const direction = [Math.cos(angle), Math.sin(angle)]
+		const newTip = _ComputeMinkowskiTip(polygon0, polygon1, direction)
+
+		//if the new direction shows not including O...
+		if (DotVec(newTip, direction) < 0) {
+			//...then the polygons are not colliding
+			return false
+		}
+	}
+
+	//"probably" colliding
+	return true
 }
 
 /**
